@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title></title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+  <canvas id="canvas" width="200" height="200" style="border:1px solid #000000;"></canvas>
+  <button type="button" id="canvasToImg">Canvas To Image</button>
+  <p>Preview</p>
+  <img id="myDrawing" src="" name="myDrawing">
+  <button id="sendToServer">Send To Server</button>
+  <p id="demo"></p>
+  <script>
+    (function () {
+      var sendBtn = document.getElementById('sendToServer'),
+        canvas = document.getElementById('canvas'),
+        canvasToImg = document.getElementById('canvasToImg'),
+        myDrawing = document.getElementById('myDrawing'),
+        context = canvas.getContext('2d'),
+        isDrawing = false,
+        mousePos;
+        
+
+      sendBtn.addEventListener('click', function () {
+        sendImgRequest(canvas.toDataURL());
+      }); 
+
+      canvasToImg.addEventListener('click', function () {
+        myDrawing.src = canvas.toDataURL();
+      });
+
+      canvas.addEventListener('mousemove', function (e) {
+        mousePos = getMousePos(canvas, e);
+        if (isDrawing) {
+          context.fillStyle = "#000000";
+          context.fillRect(mousePos.x, mousePos.y, 10, 10);
+        }
+      }, false);
+
+      canvas.addEventListener('mousedown', function (e) {
+        isDrawing = true;
+      }, false);
+
+      canvas.addEventListener('mouseup', function (e) {
+        isDrawing = false;
+      }, false);
+
+      function getMousePos(canvas, e) {
+        var rect = canvas.getBoundingClientRect();
+        return {
+          x: e.clientX - rect.left,
+          y: e.clientY - rect.top
+        };
+      }
+
+      function getHTTPObject() {
+        if (typeof XMLHttpRequest !== "undefined") {
+          return new XMLHttpRequest();
+        } try {
+          return new ActiveXObject("Msxml2.XMLHTTP");
+        } catch (e) {
+          try {
+            return new ActiveXObject("Microsoft.XMLHTTP");
+          } catch (e) {
+            console.log("you don't have httpObject");
+          }
+        }
+        return false;
+      }
+
+      function sendImgRequest(url) {
+        var xhr = getHTTPObject();
+        var demo = document.getElementById('demo');
+        xhr.onreadystatechange = function () {
+          if (this.readyState === 4 && this.status === 200) {
+            console.log("request end");
+          }
+        };
+
+        xhr.onload = function () {
+          demo.innerHTML = xhr.responseText;
+        }
+
+        xhr.open('POST', '/addDrawing', true);
+        xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded;charset=UTF-8');
+        console.log("your drawing img src is : " + url);
+
+        xhr.send("url=" + url);
+      }
+    }());
+  </script>
+</body>
+
+</html>
